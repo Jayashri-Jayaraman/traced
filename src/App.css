@@ -23,6 +23,29 @@
 .step.active .step-circle {
   background: #FF6B6B; color: white;   /* coral when active */
 }
+.hints { margin-top: 16px; }
+.hint {
+  border: 1px solid #F0E4DC;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.hint-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: #FFF9F5;
+  font-weight: 600;
+  color: #3D3546;
+}
+.hint-header:hover { background: #FFF0EA; }
+.hint-body {
+  padding: 0 14px 14px;
+  color: #8A8194;
+  font-size: 13px;
+  line-height: 1.6;
+}
 .step-label { font-size: 12px; margin-top: 6px; color: #8A8194; }
 .step.active .step-label { color: #FF6B6B; font-weight: 600; }
 .counter {
