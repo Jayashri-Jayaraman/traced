@@ -7,7 +7,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -46,16 +45,19 @@ public class Design {
     // Stored as opaque JSON blobs — the shape mirrors the frontend's own state
     // (stepAnswers / nodes / edges), so the backend doesn't need to model the
     // node/edge schema and stays free to change on the client.
-    @Lob
-    @Column(nullable = false)
+    //
+    // columnDefinition="text" is deliberate, not @Lob: @Lob maps a String to a
+    // Postgres large object (oid), which requires the read to happen inside an
+    // explicit transaction — it works against H2 (no such restriction) but
+    // throws "Large Objects may not be used in auto-commit mode" against real
+    // Postgres on any non-transactional read, e.g. DesignService.listMine/get.
+    @Column(nullable = false, columnDefinition = "text")
     private String stepAnswersJson;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String nodesJson;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String edgesJson;
 
     @Column(nullable = false, updatable = false)

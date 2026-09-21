@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { signup, login, clearSession, getStoredUser, listDesigns, getDesign, createDesign, updateDesign } from './api';
+import { signup, login, clearSession, getStoredUser, listDesigns, getDesign, createDesign, updateDesign, deleteDesign } from './api';
 
 const STORAGE_KEY = 'traced-state-v1';
 const NODE_WIDTH = 132;
@@ -198,6 +198,7 @@ function App() {
   const [designId, setDesignId] = useState(saved?.designId ?? null);
   const [designName, setDesignName] = useState(saved?.designName ?? 'Untitled design');
   const [cloudStatus, setCloudStatus] = useState('');
+  const [cloudError, setCloudError] = useState('');
   const [designList, setDesignList] = useState(null);
   const [designListOpen, setDesignListOpen] = useState(false);
 
@@ -565,6 +566,7 @@ function App() {
     setDesignList(null);
     setDesignListOpen(false);
     setCloudStatus('');
+    setCloudError('');
   }
 
   async function handleSaveToCloud() {
@@ -573,15 +575,31 @@ function App() {
       return;
     }
     setCloudStatus('saving');
+    setCloudError('');
     const payload = { name: designName || 'Untitled design', currentStep, stepAnswers, nodes, edges };
     try {
       const result = designId ? await updateDesign(designId, payload) : await createDesign(payload);
       setDesignId(result.id);
       setCloudStatus('saved');
       setDesignList(null);
-    } catch {
+    } catch (err) {
       setCloudStatus('error');
+      setCloudError(err.message || 'Could not save to the cloud.');
     }
+  }
+
+  function startNewDesign() {
+    setDesignId(null);
+    setDesignName('Untitled design');
+    setCurrentStep(0);
+    setStepAnswers(DEFAULT_ANSWERS);
+    setNodes(DEFAULT_NODES);
+    setEdges(DEFAULT_EDGES);
+    setSelectedNodeId(null);
+    setSelectedEdgeId(null);
+    setCloudStatus('');
+    setCloudError('');
+    setDesignListOpen(false);
   }
 
   async function toggleDesignList() {
@@ -590,8 +608,9 @@ function App() {
     if (opening && !designList) {
       try {
         setDesignList(await listDesigns());
-      } catch {
+      } catch (err) {
         setDesignList([]);
+        setCloudError(err.message || 'Could not load your designs.');
       }
     }
   }
@@ -606,8 +625,22 @@ function App() {
       setNodes((design.nodes || []).map(normalizeNode));
       setEdges(design.edges || []);
       setDesignListOpen(false);
-    } catch {
+      setCloudStatus('');
+      setCloudError('');
+    } catch (err) {
       setCloudStatus('error');
+      setCloudError(err.message || 'Could not load that design.');
+    }
+  }
+
+  async function handleDeleteDesign(id, e) {
+    e.stopPropagation();
+    try {
+      await deleteDesign(id);
+      setDesignList((prev) => (prev || []).filter((d) => d.id !== id));
+      if (id === designId) startNewDesign();
+    } catch (err) {
+      setCloudError(err.message || 'Could not delete that design.');
     }
   }
 
@@ -630,6 +663,7 @@ function App() {
                 onChange={(e) => setDesignName(e.target.value)}
                 placeholder="Design name"
               />
+              <button className="cloud-btn" onClick={startNewDesign}>+ New</button>
               <div className="design-load-wrap">
                 <button className="cloud-btn" onClick={toggleDesignList}>My Designs ▾</button>
                 {designListOpen && (
@@ -640,9 +674,18 @@ function App() {
                       <div className="design-list-empty">No saved designs yet.</div>
                     ) : (
                       designList.map((d) => (
-                        <button key={d.id} className="design-list-item" onClick={() => handleLoadDesign(d.id)}>
-                          {d.name}
-                        </button>
+                        <div key={d.id} className="design-list-row">
+                          <button className="design-list-item" onClick={() => handleLoadDesign(d.id)}>
+                            {d.name}
+                          </button>
+                          <button
+                            className="design-list-delete"
+                            title="Delete design"
+                            onClick={(e) => handleDeleteDesign(d.id, e)}
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))
                     )}
                   </div>
@@ -663,6 +706,12 @@ function App() {
           </button>
           <button className="reset-btn" onClick={resetAll}>Reset</button>
         </div>
+        {cloudError && (
+          <div className="cloud-error-banner">
+            {cloudError}
+            <button className="cloud-error-dismiss" onClick={() => setCloudError('')}>×</button>
+          </div>
+        )}
       </header>
 
       {authOpen && (

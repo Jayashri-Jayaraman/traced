@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -24,13 +25,19 @@ public class SecurityConfig {
 
     private final AppUserDetailsService userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
+    private final AuthRateLimitFilter authRateLimitFilter;
 
-    @Value("${app.cors.allowed-origin}")
-    private String allowedOrigin;
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
-    public SecurityConfig(AppUserDetailsService userDetailsService, JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(
+            AppUserDetailsService userDetailsService,
+            JwtAuthFilter jwtAuthFilter,
+            AuthRateLimitFilter authRateLimitFilter
+    ) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthFilter = jwtAuthFilter;
+        this.authRateLimitFilter = authRateLimitFilter;
     }
 
     @Bean
@@ -53,7 +60,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
+        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -77,7 +87,8 @@ public class SecurityConfig {
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthFilter, AuthRateLimitFilter.class);
 
         return http.build();
     }

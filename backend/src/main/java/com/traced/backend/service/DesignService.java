@@ -30,6 +30,7 @@ public class DesignService {
         this.objectMapper = objectMapper;
     }
 
+    @Transactional(readOnly = true)
     public List<DesignSummaryResponse> listMine(String ownerEmail) {
         User owner = requireUser(ownerEmail);
         return designRepository.findByOwnerIdOrderByUpdatedAtDesc(owner.getId()).stream()
@@ -37,6 +38,7 @@ public class DesignService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public DesignResponse get(String ownerEmail, Long id) {
         Design design = requireOwnedDesign(ownerEmail, id);
         return toResponse(design);

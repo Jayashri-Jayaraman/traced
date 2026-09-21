@@ -20,6 +20,7 @@
   padding: 0 20px;
   font-weight: 700;
   font-size: 20px;
+  position: relative;
 }
 
 .header-actions { display: flex; gap: 10px; }
@@ -90,7 +91,9 @@
   padding: 6px;
 }
 .design-list-empty { padding: 10px; font-size: 13px; color: #64748B; }
+.design-list-row { display: flex; align-items: center; gap: 2px; }
 .design-list-item {
+  flex: 1;
   background: none;
   border: none;
   text-align: left;
@@ -101,6 +104,44 @@
   cursor: pointer;
 }
 .design-list-item:hover { background: #F1F5F9; }
+.design-list-delete {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.design-list-delete:hover { background: #FEE2E2; color: #B91C1C; }
+
+/* ── Cloud sync error banner ── */
+.cloud-error-banner {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-bottom: 1px solid #FECACA;
+  padding: 8px 20px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 50;
+}
+.cloud-error-dismiss {
+  background: none;
+  border: none;
+  color: #B91C1C;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 
 /* ── Auth modal ── */
 .modal-overlay {

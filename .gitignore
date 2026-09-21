@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local secrets for docker compose — never commit the real file.
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
