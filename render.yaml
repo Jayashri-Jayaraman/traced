@@ -18,8 +18,6 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
-        value: update
       - key: APP_JWT_SECRET
         generateValue: true
       # From your Neon (or other Postgres) project:
