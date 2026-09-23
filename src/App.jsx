@@ -126,6 +126,35 @@ const DEFAULT_NODES = [
 const DEFAULT_EDGES = [];
 const DEFAULT_ANSWERS = { 0: '', 1: '', 2: '', 3: '' };
 
+// ── Sample design: one of every component, wired into a realistic request path
+// (static assets via the CDN, everything else via the load balancer, the
+// service fanning out to cache/database/queue) so "Sample Simulation" has
+// traffic to show through every component type at once. ──
+// The canvas doesn't scroll (overflow: hidden), so this stays inside a
+// conservative ~750x450 area rather than the full width a wider window offers.
+// Every node sits at y >= 190 to clear the Live Simulation stats panel, which
+// is pinned to the canvas's top-right corner while a simulation is running.
+const SAMPLE_NODES = [
+  { id: 101, type: 'client', x: 10, y: 190 },
+  { id: 102, type: 'cdn', x: 10, y: 330 },
+  { id: 103, type: 'load-balancer', x: 160, y: 190 },
+  { id: 104, type: 'gateway', x: 310, y: 190 },
+  { id: 105, type: 'service', x: 460, y: 190 },
+  { id: 106, type: 'cache', x: 610, y: 190 },
+  { id: 107, type: 'database', x: 610, y: 270 },
+  { id: 108, type: 'queue', x: 610, y: 350 },
+].map(n => normalizeNode({ ...n, label: NODE_TYPES[n.type].label }));
+
+const SAMPLE_EDGES = [
+  { id: 201, from: 101, to: 102 },
+  { id: 202, from: 101, to: 103 },
+  { id: 203, from: 103, to: 104 },
+  { id: 204, from: 104, to: 105 },
+  { id: 205, from: 105, to: 106 },
+  { id: 206, from: 105, to: 107 },
+  { id: 207, from: 105, to: 108 },
+];
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -515,6 +544,22 @@ function App() {
     setSimActive(prev => !prev);
   }
 
+  function loadSampleSimulation() {
+    setSimActive(false);
+    setSelectedNodeId(null);
+    setSelectedEdgeId(null);
+    setConnectingFrom(null);
+    setValidationResult(null);
+    setCurrentStep(3);
+    setNodes(SAMPLE_NODES);
+    setEdges(SAMPLE_EDGES);
+    // Deferred a tick so the simulation effect's cleanup runs against whatever
+    // was loaded before (clearing old particles/stats) before it restarts
+    // against the sample graph — setting this true in the same batch as the
+    // node/edge swap above would skip that reset if a simulation was already running.
+    setTimeout(() => setSimActive(true), 0);
+  }
+
   function resetAll() {
     if (!window.confirm('Clear the entire diagram and notes? This cannot be undone.')) return;
     setSimActive(false);
@@ -700,6 +745,7 @@ function App() {
           ) : (
             <button className="cloud-btn" onClick={() => setAuthOpen(true)}>Log in / Sign up</button>
           )}
+          <button className="cloud-btn" onClick={loadSampleSimulation}>Sample Simulation</button>
           <button className="validate-btn" onClick={runValidation}>Validate</button>
           <button className={`sim-btn${simActive ? ' active' : ''}`} onClick={toggleSimulation}>
             {simActive ? '■ Stop Simulation' : '▶ Start Simulation'}
