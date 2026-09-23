@@ -905,7 +905,16 @@ function App() {
 
         {simActive && (
           <div className="live-stats-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="live-stats-title"><span className="live-dot" />Live Simulation</div>
+            <div className="live-stats-title">
+              <span className="live-dot" />Live Simulation
+              <button
+                className="live-stats-close"
+                onClick={() => setSimActive(false)}
+                title="Stop simulation"
+              >
+                ×
+              </button>
+            </div>
             <div className="live-stats-row"><span>Throughput</span><strong>{liveStats.rps} req/s</strong></div>
             <div className="live-stats-row"><span>Avg latency</span><strong>{liveStats.avgLatency} ms</strong></div>
             <div className="live-stats-row"><span>Completed</span><strong>{liveStats.completed}</strong></div>

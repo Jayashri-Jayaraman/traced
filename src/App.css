@@ -502,7 +502,7 @@
 /* ── Live simulation stats ── */
 .live-stats-panel {
   position: absolute;
-  left: 16px;
+  right: 16px;
   top: 16px;
   width: 200px;
   background: white;
@@ -528,6 +528,16 @@
   background: #16A34A;
   animation: pulse-live 1.2s infinite;
 }
+.live-stats-close {
+  margin-left: auto;
+  border: none;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748B;
+}
+.live-stats-close:hover { color: #1E293B; }
 @keyframes pulse-live {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
