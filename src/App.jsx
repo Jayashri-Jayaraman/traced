@@ -130,20 +130,47 @@ const DEFAULT_ANSWERS = { 0: '', 1: '', 2: '', 3: '' };
 // (static assets via the CDN, everything else via the load balancer, the
 // service fanning out to cache/database/queue) so "Sample Simulation" has
 // traffic to show through every component type at once. ──
-// The canvas doesn't scroll (overflow: hidden), so this stays inside a
-// conservative ~750x450 area rather than the full width a wider window offers.
-// Every node sits at y >= 190 to clear the Live Simulation stats panel, which
-// is pinned to the canvas's top-right corner while a simulation is running.
-const SAMPLE_NODES = [
-  { id: 101, type: 'client', x: 10, y: 190 },
-  { id: 102, type: 'cdn', x: 10, y: 330 },
-  { id: 103, type: 'load-balancer', x: 160, y: 190 },
-  { id: 104, type: 'gateway', x: 310, y: 190 },
-  { id: 105, type: 'service', x: 460, y: 190 },
-  { id: 106, type: 'cache', x: 610, y: 190 },
-  { id: 107, type: 'database', x: 610, y: 270 },
-  { id: 108, type: 'queue', x: 610, y: 350 },
-].map(n => normalizeNode({ ...n, label: NODE_TYPES[n.type].label }));
+// Positions are computed at load time from the canvas's actual measured size
+// (see buildSampleNodes) rather than hardcoded, since the canvas doesn't
+// scroll (overflow: hidden) and its width varies with the window — fixed
+// pixel coordinates that fit one window size clip or overlap the Inspector
+// panel at another.
+const SAMPLE_LAYOUT = [
+  { id: 101, type: 'client', col: 0, row: 0 },
+  { id: 102, type: 'cdn', col: 0, row: 1 },
+  { id: 103, type: 'load-balancer', col: 1, row: 0 },
+  { id: 104, type: 'gateway', col: 2, row: 0 },
+  { id: 105, type: 'service', col: 3, row: 0 },
+  { id: 106, type: 'cache', col: 4, row: 0 },
+  { id: 107, type: 'database', col: 4, row: 1 },
+  { id: 108, type: 'queue', col: 4, row: 2 },
+];
+
+// canvasRect: the live .canvas element's bounding rect, so this always fits
+// the space actually available instead of a guessed pixel budget. topMargin
+// keeps row 0 clear of the Live Simulation stats panel pinned to the
+// canvas's top-right corner while a simulation is running.
+function buildSampleNodes(canvasRect) {
+  const cols = 5;
+  const rows = 3;
+  const topMargin = 190;
+  const sideMargin = 16;
+  const bottomMargin = 16;
+  const width = canvasRect?.width || 900;
+  const height = canvasRect?.height || 560;
+  const colGap = Math.max((width - NODE_WIDTH - sideMargin) / (cols - 1), 40);
+  const rowGap = Math.max((height - topMargin - NODE_HEIGHT - bottomMargin) / (rows - 1), 40);
+
+  return SAMPLE_LAYOUT.map(({ id, type, col, row }) =>
+    normalizeNode({
+      id,
+      type,
+      label: NODE_TYPES[type].label,
+      x: Math.round(col * colGap),
+      y: Math.round(topMargin + row * rowGap),
+    })
+  );
+}
 
 const SAMPLE_EDGES = [
   { id: 201, from: 101, to: 102 },
@@ -551,7 +578,7 @@ function App() {
     setConnectingFrom(null);
     setValidationResult(null);
     setCurrentStep(3);
-    setNodes(SAMPLE_NODES);
+    setNodes(buildSampleNodes(canvasRef.current?.getBoundingClientRect()));
     setEdges(SAMPLE_EDGES);
     // Deferred a tick so the simulation effect's cleanup runs against whatever
     // was loaded before (clearing old particles/stats) before it restarts
